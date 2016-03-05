@@ -328,6 +328,8 @@ void setup()
   Serial.println("RF24 init");
   radio.begin(); 
   radio.setPALevel(RF24_PA_MAX);
+  radio.setChannel(105);
+  radio.setDataRate(RF24_250KBPS);
   radio.printDetails();
   radio.stopListening();
     
