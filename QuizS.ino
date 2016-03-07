@@ -38,6 +38,7 @@ const int bluePin = 6;
 
 void setColor(uint8_t red, uint8_t green, uint8_t blue)
 {
+  // RED, GREEN 127-128, BLUE 0-105
 #ifdef COMMON_ANODE
   red = 255 - red;
   green = 255 - green;
@@ -48,68 +49,6 @@ void setColor(uint8_t red, uint8_t green, uint8_t blue)
   analogWrite(bluePin, blue);
 }
 
-void rgbGlow()
-{
-#define GLOW_DELAY 20  
-  static unsigned long time = 0;
-  static int state = GLOW_GREEN;
-  static uint8_t red = 0, green = 255, blue = 0;
- 
-  if (millis() < time)
-  {
-    return;  
-  }
-
-  switch (state)
-  {
-    case GLOW_GREEN:
-      red = 0;
-      green--;
-      blue+=1;
-      if (green == 170)
-        state = GLOW_BLUE;
-      break;
-    case GLOW_BLUE:
-      red++;
-      green = 0;
-      blue = 125;
-      if (red == 255)
-        state = GLOW_PURPLE;    
-      break;
-    case GLOW_PURPLE: //OK
-      red = 255;
-      green = 0;
-      blue--;
-      if (blue == 0)
-        state = GLOW_RED;
-    break;
-    case GLOW_RED:
-      red = 255;
-      red--;
-      green++;
-      blue = 0;
-      if (green == 255)
-        state = GLOW_YELLOW;
-    break;
-    case GLOW_YELLOW:
-      red--;
-      green = 255;
-      blue = 0;
-      if (red == 0)
-        state = GLOW_GREEN;
-    break;
-    default:
-    break;
-  }
-  setColor(red, green, blue);
-  Serial.print(red);
-  Serial.print(" ");
-  Serial.print(green);
-  Serial.print(" ");
-  Serial.println(blue);
-  
-  time = millis() + GLOW_DELAY;
-}
 //===============================================================
 // LED 7 segment display
 //===============================================================
