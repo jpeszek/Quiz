@@ -1,11 +1,8 @@
 //================================================================
 // Quiz master
 //
-// change log:
-// 2016-2-1  0.1 Initial revision
-// 2016-2-17 0.2 Added sending 3x GETREADY message
 //================================================================
-#define FW_VER "0.2"
+#define FW_VER "0.3"
 
 //================================================================
 // Utils
@@ -312,7 +309,46 @@ void radioEmptyRxQueues()
   while (radio.available())
     radio.read(data,sizeof(data)); //read remaining data in buffers to clean it up
 }
+//================================================================
+// Serial
+//================================================================  
+#include <SoftwareSerial.h>  
+#include <SerialCommand.h>
 
+SerialCommand SCmd;   
+
+void mIdle2Wait();
+void mAssess2Right();
+void mAssess2Wrong();
+
+void scmdGetReady()
+{
+  Serial.println("GET READY");
+  mIdle2Wait();
+}
+
+void scmdRight()
+{
+  mAssess2Right();
+}
+
+void scmdWrong()
+{
+  mAssess2Wrong();
+}
+
+void scmdUnrecognized()
+{
+  Serial.println("what?");
+}
+
+void scmdInit()
+{
+  SCmd.addCommand("$GR", scmdGetReady); 
+  SCmd.addCommand("$R", scmdRight);
+  SCmd.addCommand("$W", scmdWrong);
+  SCmd.addDefaultHandler(scmdUnrecognized);
+}
 //================================================================
 // Setup
 //================================================================  
@@ -340,6 +376,7 @@ void setup()
   lcd.print(FW_VER);
   delay(1000);
   tone(buzzPin, NOTE_C3, 400);  
+  scmdInit();
 }
 
 //================================================================
@@ -468,6 +505,16 @@ void mWait()
 }
 
 
+void mAssess2Right()
+{
+  state = MASTER_RIGHT;
+}
+
+void mAssess2Wrong()
+{
+  state = MASTER_WRONG;
+}
+
 void mAssess()
 {
   uint8_t data[2];
@@ -483,10 +530,10 @@ void mAssess()
     switch(buttn)
     {
       case BTN_RED:  
-        state = MASTER_WRONG;
+        mAssess2Wrong();
         break;
       case BTN_GREEN:
-        state = MASTER_RIGHT;
+        mAssess2Right();
         break;
       default:
         break;
@@ -529,7 +576,8 @@ void mWrong()
 void loop()
 {
   buttonScan();
-
+  SCmd.readSerial();
+  
   switch(state)
   {
     case MASTER_IDLE:
