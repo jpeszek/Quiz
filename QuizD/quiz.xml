@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<quiz>
+	<test id="1" reward="1" penalty="1" image="france.jpg" answer="Paris">
+		What is the capital of France?
+	</test>
+	<test id="2" reward="1" penalty="1" answer="Berlin">
+		What is the capital of Germany?
+	</test>
+	<test id="3" reward="1" penalty="1" answer="Graham Bell">
+		Who invented telephone?	
+	</test>
+	<test id="4" reward="1" penalty="1" answer="1 IX 1939">
+		When the WWII broke out?	
+	</test>
+</quiz>
