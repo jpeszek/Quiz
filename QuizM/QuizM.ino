@@ -342,6 +342,13 @@ void scmdUnrecognized()
   Serial.println("what?");
 }
 
+void scmdFirst(unsigned int player)  // send to desktop
+{
+  Serial.print("$F");
+  Serial.print(player);
+  Serial.print("\n\r");
+}
+
 void scmdInit()
 {
   SCmd.addCommand("$GR", scmdGetReady); 
@@ -411,6 +418,22 @@ void mConfig()
   
 }
 
+void justScore(unsigned int score)
+{
+  if (score > 99)
+  {
+    lcd.print(" ");
+  }
+  else if (score > 9)
+  {
+    lcd.print("  ");
+  }
+  else 
+  {
+    lcd.print("   ");
+  }
+  lcd.print(score);
+}
 void displayScore()
 {
 #define SCORE_DELAY 1500
@@ -426,11 +449,9 @@ void displayScore()
   lcd.print("   ");
   lcd.print(2*state+2);
   lcd.setCursor(0, 1);
-  lcd.print("Score:");
-  lcd.print("     ");
-  lcd.print(score[2*state+1]);
-  lcd.print("   ");
-  lcd.print(score[2*state+2]);
+  lcd.print("Score:  ");
+  justScore(score[2*state+1]);
+  justScore(score[2*state+2]);
   
   state = (state+1) % 3;
   
@@ -490,7 +511,11 @@ void mWait()
     data[0] = RADIO_FIRST;
     data[1] = firstPlayer;
     for (int i = 0; i < 3; i++)
+    {
       radio.write(&data, sizeof(data));
+      delay(10);
+    }
+    scmdFirst(firstPlayer);
     state = MASTER_ASSESS;
   }
   
