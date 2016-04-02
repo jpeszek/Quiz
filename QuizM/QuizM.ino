@@ -466,6 +466,7 @@ void mIdle2Wait()
   lcd.print("Waiting...");
   ledOff(LED_GREEN);
   
+  radioEmptyRxQueues();
   radio.stopListening();
   radio.openWritingPipe(addresses[0]);
   for(int i = 0; i < 3; i++)

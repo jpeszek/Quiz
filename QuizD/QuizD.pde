@@ -1,4 +1,6 @@
 import ddf.minim.*;
+import processing.serial.*;
+
 Minim minim;
 AudioPlayer player;
 
@@ -9,6 +11,7 @@ XML xml;
 XML[] tests; 
 int currentTest = 0;
 int[] score;
+int firstPlayer = 0;
 int maxPlayers = 6;
  
 public enum State {
@@ -46,6 +49,12 @@ void setup() {
   xml = loadXML("quiz.xml");
   tests = xml.getChildren("test");
   score = new int[maxPlayers];
+
+  //Serial port init
+  printArray(Serial.list());
+  serialPort = new Serial(this, Serial.list()[1], 115200);
+  serialPort.bufferUntil(0x0A); 
+     
   for (int i = 0; i < maxPlayers; i++) {
     score[i] = 0;
   } 
@@ -76,7 +85,7 @@ void qInit() {
   if (getKey()!=0) {
     state = State.STATE_IDLE;
     textSize = 50;
-  }
+  }  
 }
  
 //===================================================================================
@@ -127,6 +136,8 @@ void qIdle2Wait() {
   timeout = timeLimit;
   timeTick = millis();
   timeoutBarX = 20;
+  serialPort.write("$GR\n\r");
+  firstPlayer = 0;
   state = State.STATE_WAIT;
 }
 
@@ -160,7 +171,7 @@ void qWait() {
       qWait2Timeout();
     }
   
-  if (getKey() != 0) {
+  if (firstPlayer != 0) {
     qWait2Assess();  
   }
 }
@@ -183,8 +194,8 @@ void qWait2Assess() {
   background(bg);
   displayQuestionNumber();
   fill(0, 255, 0);
-  text("Player:"+key, bgSizeX/2, bgSizeY/2-100);
-  text("Waiting for the answer"+key, bgSizeX/2, bgSizeY/2);
+  text("Player:"+firstPlayer, bgSizeX/2, bgSizeY/2-300);
+  text("Waiting for the answer...", bgSizeX/2, bgSizeY/2);
     
   state = State.STATE_ASSESS;
 }
@@ -198,6 +209,7 @@ void qTimeout() {
     currentTest++;
     if (currentTest == tests.length)
       currentTest = 0;
+    serialPort.write("$W\n\r");
     state = State.STATE_IDLE;
   }
 }
@@ -209,9 +221,6 @@ void qAssess() {
   int key;
   
   textAlign(CENTER);
-  background(bg);
-  displayQuestionNumber();
-  text("Waiting for the answer...", bgSizeX/2, bgSizeY/2);
     
   key = getKey();
   if (key =='r') {
@@ -231,7 +240,9 @@ void qAssess2Right() {
   text(question, bgSizeX/2, bgSizeY/2);
   player = minim.loadFile("fanfare.wav"); 
   player.play();
-
+  score[firstPlayer-1]++;
+  serialPort.write("$R\n\r");
+  
   state = State.STATE_RIGHT;
 }
 
@@ -246,7 +257,7 @@ void qAssess2Wrong() {
   text(question, bgSizeX/2, bgSizeY/2);
   player = minim.loadFile("wrong.wav"); 
   player.play();
-
+  serialPort.write("$W\n\r");  
   state = State.STATE_WRONG;
 }
 
@@ -259,7 +270,8 @@ void qRight() {
     currentTest++;
     if (currentTest == tests.length)
       currentTest = 0;
-    state = State.STATE_IDLE;
+   
+     state = State.STATE_IDLE;
   }
 }
 //===================================================================================
@@ -281,7 +293,7 @@ void display() {
       qInit();
       break;
     case STATE_CONFIG:
-    break;
+      break;
     case STATE_IDLE:
       qIdle();
       break;
@@ -334,3 +346,25 @@ int getKey()
 void keyPressed() {
   keyIndex = key;
 }
+
+//===================================================================================
+// Serial
+//===================================================================================
+// message format                   message descirption     message direction
+//| byte 0 |  byte 1 |  byte 3 |                          | 
+//|  '$'   |   'G'   |   'R'   |    GET READY             | desktop -> master
+//|  '$'   |   'F'   | player  |    FIRST                 | master -> desktop   
+//|  '$'   |   'R'   |  score  |    RIGHT                 | desktop -> master 
+//|  '$'   |   'W'   | xxxxxxx |    WRONG                 | desktop -> master
+Serial serialPort;  
+String serialCmd;
+void serialEvent(Serial p) { 
+  serialCmd = p.readString(); 
+  println(serialCmd);
+  if (serialCmd.contains("$F") == true) {
+    int player = serialCmd.lastIndexOf('F')+1;
+    println(serialCmd.substring(player, player+1));  
+    firstPlayer = Integer.parseInt(serialCmd.substring(player, player+1));  
+    serialCmd="";
+}
+} 
