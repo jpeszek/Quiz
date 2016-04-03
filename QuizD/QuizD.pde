@@ -209,7 +209,7 @@ void qTimeout() {
     currentTest++;
     if (currentTest == tests.length)
       currentTest = 0;
-    serialPort.write("$W\n\r");
+    serialPort.write("$T\n\r");
     state = State.STATE_IDLE;
   }
 }
@@ -350,9 +350,10 @@ void keyPressed() {
 //===================================================================================
 // Serial
 //===================================================================================
-// message format                   message descirption     message direction
+// message format                   message description     message direction
 //| byte 0 |  byte 1 |  byte 3 |                          | 
 //|  '$'   |   'G'   |   'R'   |    GET READY             | desktop -> master
+//|  '$'   |   'T'   | xxxxxxx |    TIMEOUT               | desktop -> master 
 //|  '$'   |   'F'   | player  |    FIRST                 | master -> desktop   
 //|  '$'   |   'R'   |  score  |    RIGHT                 | desktop -> master 
 //|  '$'   |   'W'   | xxxxxxx |    WRONG                 | desktop -> master
