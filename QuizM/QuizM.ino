@@ -320,6 +320,7 @@ SerialCommand SCmd;
 void mIdle2Wait();
 void mAssess2Right();
 void mAssess2Wrong();
+void mWait2Idle();
 
 void scmdGetReady()
 {
@@ -337,6 +338,11 @@ void scmdWrong()
   mAssess2Wrong();
 }
 
+void scmdTimeout()
+{
+  mWait2Idle();
+}
+
 void scmdUnrecognized()
 {
   Serial.println("what?");
@@ -352,6 +358,7 @@ void scmdFirst(unsigned int player)  // send to desktop
 void scmdInit()
 {
   SCmd.addCommand("$GR", scmdGetReady); 
+  SCmd.addCommand("$T", scmdTimeout); 
   SCmd.addCommand("$R", scmdRight);
   SCmd.addCommand("$W", scmdWrong);
   SCmd.addDefaultHandler(scmdUnrecognized);
@@ -490,6 +497,14 @@ void mIdle()
   }
 }
 
+void mWait2Idle()
+{
+  lcd.clear();
+  lcd.print("Cancelling...");
+  ledOff(LED_RED);
+  state = MASTER_IDLE; 
+}
+
 void mWait()
 {
   uint8_t pipeNum;
@@ -522,11 +537,7 @@ void mWait()
   
   if (getButton() == BTN_RED)
   {
-    Serial.println("go to IDLE");
-    lcd.clear();
-    lcd.print("Cancelling...");
-    ledOff(LED_RED);
-    state = MASTER_IDLE; 
+    mWait2Idle();
   }
 }
 
